@@ -18,7 +18,45 @@ Usage (once implemented):
     print(result["error"])   # None on success
 """
 
+import re
+
 from tools import search_listings, suggest_outfit, create_fit_card
+
+
+# ── query parsing ─────────────────────────────────────────────────────────────
+
+def _parse_query(query: str) -> dict:
+    """
+    Extract a description, optional size, and optional max_price from the
+    user's natural-language query.
+
+    - max_price: matches patterns like "under $30", "$40", or "below 25".
+    - size:      matches "size M", "size 8", or "in size L".
+    - description: the remaining words after removing the price and size phrases.
+
+    Returns a dict with keys: description, size, max_price.
+    """
+    text = query
+    max_price = None
+    size = None
+
+    # Price: "under $30", "below 25", "$40", "under 30 dollars"
+    price_match = re.search(r"(?:under|below|less than|max|<|\$)\s*\$?\s*(\d+(?:\.\d+)?)", text, re.IGNORECASE)
+    if price_match:
+        max_price = float(price_match.group(1))
+        text = text[:price_match.start()] + text[price_match.end():]
+
+    # Size: "size M", "in size 8", "size: L"
+    size_match = re.search(r"\bsize:?\s*([A-Za-z0-9]+)", text, re.IGNORECASE)
+    if size_match:
+        size = size_match.group(1).upper()
+        text = text[:size_match.start()] + text[size_match.end():]
+
+    # Whatever is left is the description; clean up stray words/punctuation.
+    description = re.sub(r"\b(under|below|less than|max|dollars?)\b", "", text, flags=re.IGNORECASE)
+    description = re.sub(r"\s+", " ", description).strip(" ,.-")
+
+    return {"description": description, "size": size, "max_price": max_price}
 
 
 # ── session state ─────────────────────────────────────────────────────────────
@@ -93,8 +131,45 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     of planning.md — your implementation should match what you described there.
     """
     # TODO: implement the planning loop
+
     session = _new_session(query, wardrobe)
-    session["error"] = "Planning loop not yet implemented."
+
+    # Step 2: Parse the user's query to extract a description, size, and max_price.
+    # I use regex to pull out an optional price ("under $30") and an optional
+    # size ("size M"), then treat the leftover words as the description.
+    session["parsed"] = _parse_query(query)
+
+    # Step 3: Call search_listings() with the parsed parameters.
+    # Store results in session["search_results"].
+    session["search_results"] = search_listings(
+        description=session["parsed"]["description"],
+        size=session["parsed"]["size"],
+        max_price=session["parsed"]["max_price"]
+    )
+
+    if not session["search_results"]:
+        session["error"] = "No matching listings found."
+        return session
+
+    # Step 4: Select the item to use (e.g., the top result).
+    # Store it in session["selected_item"].
+    session["selected_item"] = session["search_results"][0]
+
+    # Step 5: Call suggest_outfit() with the selected item and wardrobe.
+    # Store the result in session["outfit_suggestion"].
+    session["outfit_suggestion"] = suggest_outfit(
+        new_item=session["selected_item"],
+        wardrobe=session["wardrobe"]
+    )
+
+    # Step 6: Call create_fit_card() with the outfit suggestion and selected item.
+    # Store the result in session["fit_card"].
+    session["fit_card"] = create_fit_card(
+        outfit=session["outfit_suggestion"],
+        new_item=session["selected_item"]
+    )
+
+    # Step 7: Return the session.
     return session
 
 

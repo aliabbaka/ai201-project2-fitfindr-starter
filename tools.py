@@ -34,6 +34,31 @@ def _get_groq_client():
     return Groq(api_key=api_key)
 
 
+# Default Groq model used by the LLM-backed tools.
+_MODEL = "llama-3.3-70b-versatile"
+
+
+def call_llm(prompt: str, temperature: float = 0.7) -> str:
+    """
+    Send a single prompt to the Groq LLM and return its text response.
+
+    Args:
+        prompt:      The user prompt to send.
+        temperature: Higher values (e.g. 0.9) make output more varied;
+                     lower values make it more focused.
+
+    Returns:
+        The model's response text as a string.
+    """
+    client = _get_groq_client()
+    response = client.chat.completions.create(
+        model=_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=temperature,
+    )
+    return response.choices[0].message.content
+
+
 # ── Tool 1: search_listings ───────────────────────────────────────────────────
 
 def search_listings(
@@ -76,7 +101,7 @@ def search_listings(
     filtered = [
         item for item in listings
         if (max_price is None or item["price"] <= max_price) and
-           (size is None or item["size"] == size)
+           (size is None or size.lower() in item["size"].lower())
     ]
 
     # Score each remaining listing by keyword overlap with `description`
@@ -126,17 +151,29 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
     Before writing code, fill in the Tool 2 section of planning.md.
     """
     if not wardrobe['items']:
-        # Prompt for general styling advice
-        prompt = f"Given the thrifted item: {new_item['title']} - {new_item['description']}, what are some general styling ideas? What kinds of items pair well with it, and what vibe does it suit?"
+        # Empty wardrobe: ask for general styling advice for the item.
+        prompt = (
+            f"Given the thrifted item: {new_item['title']} - {new_item['description']}, "
+            f"what are some general styling ideas? What kinds of items pair well with it, "
+            f"and what vibe does it suit?"
+        )
     else:
-        # Format wardrobe items into a prompt
+        # Format the wardrobe items into a prompt. Wardrobe items have the
+        # fields: name, category, colors, style_tags, notes.
         wardrobe_items = "\n".join(
-            f"- {item['title']} (size: {item['size']}, color: {', '.join(item['colors'])})"
+            f"- {item['name']} ({item['category']}, "
+            f"colors: {', '.join(item['colors'])}, "
+            f"style: {', '.join(item['style_tags'])})"
             for item in wardrobe['items']
         )
-        prompt = f"Given the thrifted item: {new_item['title']} - {new_item['description']}, and the following wardrobe items:\n{wardrobe_items}\nSuggest 1–2 complete outfits that include the new item and named pieces from the wardrobe."
-    # Replace this with your implementation
-    return ""
+        prompt = (
+            f"Given the thrifted item: {new_item['title']} - {new_item['description']}, "
+            f"and the following wardrobe items:\n{wardrobe_items}\n"
+            f"Suggest 1–2 complete outfits that include the new item and named pieces "
+            f"from the wardrobe."
+        )
+
+    return call_llm(prompt)
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
@@ -175,5 +212,5 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
     # Build a prompt for the LLM
     prompt = f"Create a casual and authentic Instagram/TikTok caption for the following outfit suggestion:\n{outfit}\n\nThe thrifted item details are as follows:\n- Title: {new_item['title']}\n- Price: ${new_item['price']}\n- Platform: {new_item['platform']}\n\nThe caption should feel casual and authentic, mention the item name, price, and platform naturally, capture the outfit vibe in specific terms, and sound different each time for different inputs."
 
-    # Call the LLM and return the response
-    return call_llm(prompt)
+    # Call the LLM with higher temperature so captions vary between runs
+    return call_llm(prompt, temperature=0.9)
