@@ -16,7 +16,7 @@ You must have at least 3 tools. The three required tools are listed — add any 
 
 **What it does:**
 <!-- Describe what this tool does in 1–2 sentences -->
-
+it minimize what the user seems from the total list, it takes anything that is relative to their query and hide the rest
 **Input parameters:**
 <!-- List each parameter, its type, and what it represents -->
 - `description` (str): ...
@@ -25,17 +25,17 @@ You must have at least 3 tools. The three required tools are listed — add any 
 
 **What it returns:**
 <!-- Describe the return value — what fields does a result contain? -->
-
+it returns the matching results 
 **What happens if it fails or returns nothing:**
 <!-- What should the agent do if no listings match? -->
-
+it will stop the processing and return an error message for the user
 ---
 
 ### Tool 2: suggest_outfit
 
 **What it does:**
 <!-- Describe what this tool does in 1–2 sentences -->
-
+it suggests what to wear related to the tool 1 outcomes
 **Input parameters:**
 <!-- List each parameter, its type, and what it represents -->
 - `new_item` (dict): ...
@@ -43,16 +43,17 @@ You must have at least 3 tools. The three required tools are listed — add any 
 
 **What it returns:**
 <!-- Describe the return value -->
-
+a matching outfits through style, color, asthetics.
 **What happens if it fails or returns nothing:**
 <!-- What should the agent do if the wardrobe is empty or no outfit can be suggested? -->
-
+it does not show any suggestions and skip the process
 ---
 
 ### Tool 3: create_fit_card
 
 **What it does:**
 <!-- Describe what this tool does in 1–2 sentences -->
+it gives a describtion of the outcomes if they ever reciveve something from card 2
 
 **Input parameters:**
 <!-- List each parameter, its type, and what it represents -->
@@ -61,10 +62,10 @@ You must have at least 3 tools. The three required tools are listed — add any 
 
 **What it returns:**
 <!-- Describe the return value -->
-
+it returns a string sentence that describes the outfit from color to style to an imaginrery setings that the outfit will fit
 **What happens if it fails or returns nothing:**
 <!-- What should the agent do if the outfit data is incomplete? -->
-
+it does not show anything.
 ---
 
 ### Additional Tools (if any)
@@ -77,14 +78,14 @@ You must have at least 3 tools. The three required tools are listed — add any 
 
 **How does your agent decide which tool to call next?**
 <!-- Describe the logic your planning loop uses. What does it look at? What conditions change its behavior? How does it know when it's done? -->
-
+it will show the results of the list first, then if there is any outcomes it trys to find a match, if there is similarties of different clothes than that will allow the third engine to work, if tool 2 did not work then tool 3 automatically neglect its process, if there is outcomes from tool2 then the work continue to shape a scenario where the matching outfit will look perfect to be wore, like meeting if its a suit or beach if its shorts 
 ---
 
 ## State Management
 
 **How does information from one tool get passed to the next?**
 <!-- Describe how your agent stores and accesses state within a session. What data is tracked? How is it passed between tool calls? -->
-
+it uses a session dict, it allows the MML to read and write different information through a shared doc
 ---
 
 ## Error Handling
@@ -141,12 +142,22 @@ Write out what a full user interaction looks like from start to finish — tool 
 
 **Step 1:**
 <!-- What does the agent do first? Which tool is called? With what input? -->
+it uses the first tool to satsfy the first condition of finding results, then it access and try to find a match in the data set
+
+
 
 **Step 2:**
 <!-- What happens next? What was returned from step 1? What tool is called now? -->
 
+two output that if no matches then it returns 0 and error message will be sent
+
+if there is then it shows output and then starts to work the suggestion tool, that either will find a good matching clothes or does not return anything if a certin level is not reaches with the matching
+
 **Step 3:**
 <!-- Continue until the full interaction is complete -->
 
+if it finds the matching it will show them and activate tool3 that will try to write something that can match the outfit and how they would fit in an imaginery settings that it will be suitbale.
 **Final output to user:**
 <!-- What does the user actually see at the end? -->
+
+the user does not have access to see the shared data section being read and edited from each tool until tool3 finishes, then what happens is the user will see the final version of results, then the matching clothes, then a card description of where it would be best to wear.

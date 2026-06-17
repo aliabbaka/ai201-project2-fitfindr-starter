@@ -77,19 +77,19 @@ Your README submission must document each tool's name, inputs, and return value.
 **User query:**
 
 **Step 1 — Tool called:**
-- Tool:
+- Tool: search_listings
 - Input:
 - Why this tool:
 - Output:
 
 **Step 2 — Tool called:**
-- Tool:
+- Tool: suggest_outfit
 - Input:
 - Why this tool:
 - Output:
 
 **Step 3 — Tool called:**
-- Tool:
+- Tool: create_fit_card
 - Input:
 - Why this tool:
 - Output:
