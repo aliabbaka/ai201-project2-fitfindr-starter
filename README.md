@@ -78,21 +78,21 @@ Your README submission must document each tool's name, inputs, and return value.
 
 **Step 1 — Tool called:**
 - Tool: search_listings
-- Input:
-- Why this tool:
-- Output:
+- Input: description=" rust-colored cords ", size="L", max_price="20"
+- Why this tool: to ease the searching process by narrowing the database to only those that matches the query
+- Output: less clothes from the list
 
 **Step 2 — Tool called:**
 - Tool: suggest_outfit
-- Input:
-- Why this tool:
-- Output:
+- Input: new_item:step 1 output clothes, wardrobe= what the user already have
+- Why this tool: it can help the user with decreasing the amount of time they spend in choosing clothes type by picking it for them
+- Output: matching outfit of the day
 
 **Step 3 — Tool called:**
 - Tool: create_fit_card
-- Input:
-- Why this tool:
-- Output:
+- Input: outfit= the output of step2, new_item= what the user have already chosen from step 1
+- Why this tool: it works as the derciption of the oufit, it tells the user what he is about to wear 
+- Output: a sentese that description of the output 
 
 **Final output to user:**
 
@@ -105,9 +105,9 @@ Your README submission must document each tool's name, inputs, and return value.
 
 | Tool | Failure mode | Agent response |
 |------|-------------|----------------|
-| `search_listings` | | |
-| `suggest_outfit` | | |
-| `create_fit_card` | | |
+| `search_listings` |does not find a fit related to the query | No such item can be found|
+| `suggest_outfit` | can't find a match| will respond with a wrong match that does not align |
+| `create_fit_card` | it will describe the wrong things |saying the size is blue or can't match the types |
 
 ---
 
@@ -116,7 +116,7 @@ Your README submission must document each tool's name, inputs, and return value.
 <!-- Answer both questions with at least 2–3 sentences each. -->
 
 **One way planning.md helped during implementation:**
-
+tells me what each catgory stores such as size will not be a float but a string
 **One divergence from your spec, and why:**
 
 ---
