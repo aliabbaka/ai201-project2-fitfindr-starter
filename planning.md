@@ -113,6 +113,35 @@ For each tool, describe the specific failure mode you're handling and what the a
      You'll share this diagram with an AI tool when asking it to implement
      the planning loop and each individual tool. -->
 
+```mermaid
+flowchart TD
+    U["User query<br/>(e.g. 'vintage tee under $30, size M')"] --> P["Planning Loop<br/>(run_agent)"]
+
+    P --> PARSE["Parse query →<br/>description, size, max_price"]
+    PARSE --> T1["Tool 1: search_listings(description, size, max_price)"]
+
+    T1 -->|"results found"| SEL["Select top result →<br/>selected_item"]
+    T1 -->|"empty list []"| ERR["Set session['error']<br/>tell user to loosen filters<br/>STOP — do not continue"]
+
+    SEL --> T2["Tool 2: suggest_outfit(new_item, wardrobe)"]
+    T2 --> T3["Tool 3: create_fit_card(outfit, new_item)"]
+    T3 --> OUT["Final output: fit card caption<br/>shown to user"]
+
+    %% Shared state
+    S[("Session state (dict)<br/>query · parsed · search_results ·<br/>selected_item · wardrobe ·<br/>outfit_suggestion · fit_card · error")]
+    T1 -.read/write.- S
+    T2 -.read/write.- S
+    T3 -.read/write.- S
+    ERR -.write.- S
+
+    ERR --> ENDX["Return session early"]
+```
+
+**How to read this diagram:**
+- The **Planning Loop** (`run_agent`) parses the query, then calls the three tools in order.
+- Each tool **reads its inputs from** and **writes its results to** the shared **session dict** — that is how state flows from one tool to the next.
+- The **error path** branches off `search_listings`: if it returns an empty list, the agent sets `session["error"]`, tells the user what to change, and stops — it never calls `suggest_outfit` with empty input.
+
 ---
 
 ## AI Tool Plan
@@ -127,7 +156,7 @@ For each tool, describe the specific failure mode you're handling and what the a
      "I'll give Claude my Tool 1 spec (inputs, return value, failure mode) and ask it to implement
      search_listings() using load_listings() from the data loader — then test it against 3 queries
      before trusting it" is a plan. -->
-
+I will use claude through out to explain to me how to impliment and what can i do to insure my code works and align with my planning.
 **Milestone 3 — Individual tool implementations:**
 
 **Milestone 4 — Planning loop and state management:**
