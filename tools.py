@@ -69,8 +69,33 @@ def search_listings(
 
     Before writing code, fill in the Tool 1 section of planning.md.
     """
-    # Replace this with your implementation
-    return []
+
+    listings = load_listings()
+
+    # Filter by max_price and size (if provided)
+    filtered = [
+        item for item in listings
+        if (max_price is None or item["price"] <= max_price) and
+           (size is None or item["size"] == size)
+    ]
+
+    # Score each remaining listing by keyword overlap with `description`
+    scored = []
+    for item in filtered:
+        score = sum(
+            1 for keyword in description.lower().split()
+            if keyword in item["title"].lower() or keyword in item["description"].lower()
+        )
+        if score > 0:
+            item["score"] = score
+            scored.append(item)
+
+    # Drop any listings with a score of 0 (no relevant matches)
+    scored = [item for item in scored if item.get("score", 0) > 0]
+
+    # Sort by score, highest first, and return the listing dicts
+    scored.sort(key=lambda x: x["score"], reverse=True)
+    return scored
 
 
 # ── Tool 2: suggest_outfit ────────────────────────────────────────────────────
@@ -100,6 +125,16 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
 
     Before writing code, fill in the Tool 2 section of planning.md.
     """
+    if not wardrobe['items']:
+        # Prompt for general styling advice
+        prompt = f"Given the thrifted item: {new_item['title']} - {new_item['description']}, what are some general styling ideas? What kinds of items pair well with it, and what vibe does it suit?"
+    else:
+        # Format wardrobe items into a prompt
+        wardrobe_items = "\n".join(
+            f"- {item['title']} (size: {item['size']}, color: {', '.join(item['colors'])})"
+            for item in wardrobe['items']
+        )
+        prompt = f"Given the thrifted item: {new_item['title']} - {new_item['description']}, and the following wardrobe items:\n{wardrobe_items}\nSuggest 1–2 complete outfits that include the new item and named pieces from the wardrobe."
     # Replace this with your implementation
     return ""
 
@@ -133,5 +168,12 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
 
     Before writing code, fill in the Tool 3 section of planning.md.
     """
-    # Replace this with your implementation
-    return ""
+
+    if not outfit.strip():
+        return "Error: No outfit suggestion available to create a fit card."
+
+    # Build a prompt for the LLM
+    prompt = f"Create a casual and authentic Instagram/TikTok caption for the following outfit suggestion:\n{outfit}\n\nThe thrifted item details are as follows:\n- Title: {new_item['title']}\n- Price: ${new_item['price']}\n- Platform: {new_item['platform']}\n\nThe caption should feel casual and authentic, mention the item name, price, and platform naturally, capture the outfit vibe in specific terms, and sound different each time for different inputs."
+
+    # Call the LLM and return the response
+    return call_llm(prompt)

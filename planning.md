@@ -158,7 +158,14 @@ flowchart TD
      before trusting it" is a plan. -->
 I will use claude through out to explain to me how to impliment and what can i do to insure my code works and align with my planning.
 **Milestone 3 — Individual tool implementations:**
+Milestone 3 — Individual tool implementations:
 
+I will use Claude to implement each tool one at a time. For each tool I'll give it that tool's spec from this planning.md — the input parameters, the return value, and the failure mode — plus the function's existing docstring and TODO steps in tools.py, and tell it to use load_listings() / get_example_wardrobe() from utils/data_loader.py instead of rewriting them.
+
+search_listings: I'll ask Claude to filter by size and max_price, score listings by keyword overlap with description, drop zero-score results, and sort by score. I'll verify it by running pytest tool1.py -v with three cases: a normal query, a price-filtered query, and a no-match query that must return [] without crashing.
+suggest_outfit: I'll give Claude the wardrobe schema and ask it to build a prompt for the Groq LLM, handling the empty-wardrobe case with general advice. I'll verify by testing once with get_example_wardrobe() and once with get_empty_wardrobe().
+create_fit_card: I'll ask Claude to build a caption prompt that names the item, price, and platform once each, and guards against an empty outfit string. I'll verify by checking the caption mentions all three and reads like a real post.
+Before trusting any tool, I test it in isolation and confirm the output matches the spec in this document.
 **Milestone 4 — Planning loop and state management:**
 
 ---
